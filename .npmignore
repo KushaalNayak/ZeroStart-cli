@@ -1,0 +1,10 @@
+src/
+.vscode/
+.vscodeignore
+tsconfig.json
+*.ts
+!*.d.ts
+node_modules/
+.git/
+.gitignore
+CONTRIBUTING.md
