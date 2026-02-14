@@ -50,7 +50,10 @@ export class GitHubServiceCLI {
                     await client.repos.replaceAllTopics({
                         owner: user.login,
                         repo: config.name,
-                        names: [config.type.toLowerCase().replace(/ /g, '-'), config.language.toLowerCase()]
+                        names: [
+                            config.type.toLowerCase().replace(/[^a-z0-9-]/g, '-'),
+                            config.language.toLowerCase().replace(/[^a-z0-9-]/g, '-')
+                        ]
                     });
                 } catch (e) {
                     console.warn("Could not set topics", e);

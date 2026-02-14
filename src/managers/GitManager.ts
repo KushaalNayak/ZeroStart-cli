@@ -57,4 +57,43 @@ export class GitManager {
             console.warn(`Failed to set remote url: ${error.message}`);
         }
     }
+
+    public async checkGhInstalled(): Promise<boolean> {
+        try {
+            await exec('gh --version');
+            return true;
+        } catch (error) {
+            return false;
+        }
+    }
+
+    public async checkGhAuth(): Promise<boolean> {
+        try {
+            await exec('gh auth status');
+            return true;
+        } catch (error) {
+            return false;
+        }
+    }
+
+    public async createRepoWithGh(cwd: string, name: string, isPublic: boolean): Promise<string> {
+        try {
+            const visibility = isPublic ? '--public' : '--private';
+            // Create repo and push
+            // gh repo create <name> --<visibility> --source=. --remote=origin --push
+            await exec(`gh repo create "${name}" ${visibility} --source=. --remote=origin`, { cwd });
+            return `https://github.com/${(await this.getGhUser())}/${name}`;
+        } catch (error: any) {
+            throw new Error(`Failed to create repo with gh: ${error.message}`);
+        }
+    }
+
+    private async getGhUser(): Promise<string> {
+        try {
+            const { stdout } = await exec('gh api user --jq .login');
+            return stdout.trim();
+        } catch {
+            return 'unknown';
+        }
+    }
 }

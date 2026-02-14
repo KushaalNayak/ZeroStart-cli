@@ -68,6 +68,33 @@ zerostart --version
 zerostart --help
 ```
 
+### Shortcut Commands ⚡
+
+Skip the wizard and build instantly with these shortcuts:
+
+| Category | Shortcut Commands |
+| :--- | :--- |
+| **DSA Practice** | `dsa-py`, `dsa-java`, `dsa-cpp`, `dsa-node` |
+| **Web Apps** | `web-react`, `web-html`, `web-node`, `web-py`, `web-java`, `web-cpp` |
+| **CLI Tools** | `cli-py`, `cli-node`, `cli-java`, `cli-cpp` |
+| **ML Projects** | `ml-py`, `ml-node`, `ml-java`, `ml-cpp` |
+
+**Example Usage**:
+```bash
+zerostart dsa-cpp my-calculator
+```
+
+### Standalone Deployment
+Retry deployments or deploy existing projects without scaffolding:
+
+```bash
+# Deploy to Vercel (Login -> Deploy)
+zerostart deploy-vercel
+
+# Deploy to Netlify (Login -> Deploy)
+zerostart deploy-netlify
+```
+
 ### Example Workflow
 
 ```bash

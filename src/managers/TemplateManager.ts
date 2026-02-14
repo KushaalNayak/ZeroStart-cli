@@ -35,6 +35,9 @@ export class TemplateManager {
             case ProjectLanguage.React:
                 await this.createReactStructure(config);
                 break;
+            case ProjectLanguage.HTMLCSS:
+                await this.createHTMLCSSStructure(config);
+                break;
         }
     }
 
@@ -221,7 +224,6 @@ add_executable(${config.name} main.cpp)`;
         if (!fs.existsSync(src)) fs.mkdirSync(src);
 
         fs.writeFileSync(path.join(src, 'App.tsx'), `
-import React from 'react';
 
 function App() {
   return (
@@ -306,5 +308,74 @@ export default defineConfig({
   "include": ["vite.config.ts"]
 }
 `);
+        this.createNetlifyConfig(config);
+    }
+
+    private async createHTMLCSSStructure(config: ProjectConfig) {
+        fs.writeFileSync(path.join(config.path, 'index.html'), `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${config.name}</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Welcome to ${config.name}</h1>
+        <p>This is a simple HTML/CSS project created by ZeroStart CLI!</p>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
+`);
+        fs.writeFileSync(path.join(config.path, 'style.css'), `
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f4f4f9;
+    color: #333;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+}
+
+.container {
+    text-align: center;
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+h1 {
+    color: #007bff;
+}
+`);
+        fs.writeFileSync(path.join(config.path, 'script.js'), `
+console.log("${config.name} initialized!");
+`);
+
+        // No netlify.toml needed for static sites if direct deploy path is known, 
+        // but we'll create a simple one for consistency.
+        const netlifyContent = `[build]
+  publish = "."
+`;
+        fs.writeFileSync(path.join(config.path, 'netlify.toml'), netlifyContent);
+    }
+
+    private createNetlifyConfig(config: ProjectConfig) {
+        // Only relevant for web apps (React, etc)
+        // For now, we assume Vite + React
+        const content = `[build]
+  command = "npm run build"
+  publish = "dist"
+
+[dev]
+  command = "npm run dev"
+`;
+        fs.writeFileSync(path.join(config.path, 'netlify.toml'), content);
     }
 }
