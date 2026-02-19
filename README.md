@@ -1,270 +1,195 @@
 # ZeroStart CLI 🚀
 
-Create and deploy a complete project with **one command**.
+> **Create and deploy a complete project — in seconds.**
 
-[![npm version](https://img.shields.io/npm/v/zerostart-cli.svg)](https://www.npmjs.com/package/zerostart-cli)
-[![npm downloads](https://img.shields.io/npm/dm/zerostart-cli.svg)](https://www.npmjs.com/package/zerostart-cli)
+[![npm version](https://img.shields.io/npm/v/zerostart-cli?color=cyan&label=version&style=flat-square)](https://www.npmjs.com/package/zerostart-cli)
+[![npm downloads](https://img.shields.io/npm/dm/zerostart-cli?color=blue&style=flat-square)](https://www.npmjs.com/package/zerostart-cli)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green?style=flat-square)](./LICENSE)
+
+**ZeroStart** is a developer CLI that scaffolds a fully structured project, initializes Git with human-style commits, and optionally pushes to GitHub or deploys to Vercel — all from a single interactive command.
+
+🌐 **Website:** [zerostart.zeroonedevs.in](https://zerostart.zeroonedevs.in)
+📦 **npm:** [npmjs.com/package/zerostart-cli](https://www.npmjs.com/package/zerostart-cli)
 
 ---
 
 ## 📦 Installation
 
-**⚠️ IMPORTANT: Use the `-g` flag to install globally!**
+Install globally to use the `zerostart` command anywhere:
 
 ```bash
 npm install -g zerostart-cli
 ```
 
-> **Why `-g`?** The `-g` flag installs ZeroStart globally on your system, making the `zerostart` command available from anywhere in your terminal. Without it, you'll only get `node_modules` and `package-lock.json` files, and the CLI won't work!
+> ⚠️ **Must use `-g`** — without the global flag, the CLI won't be available in your terminal.
 
 ---
 
-## 🚀 Quick Start
-
-After installing globally, create a new project:
-
-```bash
-zerostart my-awesome-project
-```
-
-Or simply run:
+## ⚡ Quick Start
 
 ```bash
 zerostart
 ```
 
-Then follow the interactive prompts!
+That's it. Follow the interactive wizard to set up your project, push to GitHub, and optionally deploy to Vercel.
 
 ---
 
-## ✨ Features
+## ✨ What It Does
 
-- 🎯 **Interactive CLI** - Guided prompts for project setup with **Back** button support
-- 🌐 **Modern Templates** - React, TypeScript, HTML/CSS, C++, Java, Python
-- 🚀 **Online GDB Support** - Instant browser redirect for Java, C++, and Python
-- 📦 **Auto-scaffolding** - Complete project structure generation
-- 📝 **Documentation** - Auto-generated README, roadmap, .gitignore
-- 🐙 **GitHub Integration** - Secure PAT-based creation and push
-- 🔒 **Vercel Deployment** - Instant deployment prompt for HTML projects
+| Step | What Happens |
+| :--- | :--- |
+| 🎯 Pick a category | Web Dev or Competitive Programming |
+| 🔤 Pick a language | React, TypeScript, HTML/CSS, C++, Java, Python |
+| 📝 Name your project | Enter any project name |
+| 🐙 GitHub integration | Optionally create a repo and push with real commits |
+| 🚀 Deploy or run locally | Deploy to Vercel instantly, or get `cd` instructions |
 
 ---
 
-## 📖 Usage
+## 🛠 Commands
 
-### Basic Usage
+### Core
 
-```bash
-# Create a project with interactive prompts
-zerostart
-
-# Create a project with a specific name
-zerostart my-project-name
-
-# Check version
-zerostart --version
-
-# Get help
-zerostart --help
-```
+| Command | Description |
+| :--- | :--- |
+| `zerostart` | Launch the full interactive wizard |
+| `zerostart init [name]` | Start a new project (with optional name) |
+| `zerostart deploy` | Deploy the current project (Vercel / Netlify) |
+| `zerostart git` | Initialize Git + optionally push to GitHub |
+| `zerostart docs` | Open the ZeroStart website in your browser |
+| `zerostart update` | Check for CLI updates |
 
 ### Shortcut Commands ⚡
 
-Skip the wizard and build instantly:
+Skip the wizard — create a project in one line:
 
-| Category | Shortcut Commands |
+```bash
+zerostart dsa-cpp my-solution
+zerostart web-react my-portfolio
+zerostart ml-py my-model
+```
+
+**All shortcuts:**
+
+| Category | Commands |
 | :--- | :--- |
 | **DSA Practice** | `dsa-py`, `dsa-java`, `dsa-cpp` |
 | **Web Apps** | `web-react`, `web-html`, `web-py`, `web-java`, `web-cpp` |
 | **CLI Tools** | `cli-py`, `cli-java`, `cli-cpp` |
 | **ML Projects** | `ml-py`, `ml-java`, `ml-cpp` |
 
-**Example Usage**:
-```bash
-zerostart dsa-cpp my-calculator
-```
+### Dev Tools
 
-### Standalone Deployment
+| Command | Description |
+| :--- | :--- |
+| `zerostart dev` | Start the local development server |
+| `zerostart build` | Build the project for production |
+| `zerostart clean` | Remove `node_modules`, `dist`, cache files |
+| `zerostart env` | Manage `.env` variables interactively |
+| `zerostart test` | Set up a testing framework |
+| `zerostart add [feature]` | Add features to an existing project |
 
-```bash
-# Deploy the current project to Vercel
-zerostart deploy-vercel
-```
+### Deployment
 
-### Example Workflow
-
-```bash
-$ zerostart my-web-app
-
-ZeroStart: Project Starter AI
-
-? Select Programming Language: › Node.js
-? Select Project Type: › Web App
-? Select Repository Visibility: › Private
-? Create GitHub Repository? › Yes
-? Enter GitHub Personal Access Token: ********
-
-✔ Generating project structure...
-✔ Initializing Git...
-✔ Creating GitHub Repository...
-✔ Pushing to GitHub...
-✔ Project 'my-web-app' created successfully!
-
-Path: C:\Users\YourName\my-web-app
-To get started:
-  cd my-web-app
-  code .
-```
+| Command | Description |
+| :--- | :--- |
+| `zerostart deploy-vercel` | Deploy current project to Vercel |
+| `zerostart deploy-netlify` | Deploy current project to Netlify |
 
 ---
 
-## 🛠️ Requirements
+## 🗂 Project Structure
 
-- **Node.js** (v18 or higher)
-- **Git** (must be installed and in PATH)
-- **GitHub Personal Access Token** (optional, for GitHub integration)
-
-### Getting a GitHub Token
-
-1. Go to [GitHub Settings → Developer settings → Personal access tokens](https://github.com/settings/tokens)
-2. Click "Generate new token (classic)"
-3. Select scopes: `repo` (full control of private repositories)
-4. Copy the token and use it when prompted by ZeroStart
-
----
-
-## 🏗️ What Gets Created
-
-ZeroStart automatically generates:
+Every project created by ZeroStart includes:
 
 ```
 my-project/
-├── src/
-│   └── (language-specific files)
+├── src/                  ← Language-specific source files
 ├── .gitignore
-├── README.md
-├── roadmap.md
-└── (additional config files based on language/type)
+├── README.md             ← Auto-generated project README
+├── roadmap.md            ← Editable project roadmap
+└── (config files based on template)
 ```
 
-Plus:
-- ✅ Git repository initialized
-- ✅ Initial commit made
-- ✅ GitHub repository created (if requested)
-- ✅ Code pushed to GitHub (if requested)
-
----
-
-## 🔧 Development
-
-Want to contribute or modify ZeroStart?
-
-### Setup
-
-```bash
-# Clone the repository
-git clone https://github.com/yourusername/zerostart-cli.git
-cd zerostart-cli
-
-# Install dependencies
-npm install
-
-# Build the project
-npm run compile
-
-# Test locally
-node ./out/cli.js --help
+**Git history (2 human-style commits):**
 ```
-
-### Project Structure
-
-```
-src/
-├── cli.ts                      # CLI entry point
-├── extension.ts                # VS Code extension entry (legacy)
-├── types.ts                    # TypeScript interfaces
-├── managers/
-│   ├── TemplateManager.ts      # Project scaffolding
-│   ├── GitManager.ts           # Git operations
-│   └── ProjectManager.ts       # Main orchestration
-└── services/
-    ├── GitHubServiceCLI.ts     # GitHub API (CLI)
-    └── GitHubService.ts        # GitHub API (VS Code)
+feat: initialize project with ZeroStart CLI
+chore: add project structure and configuration files
 ```
 
 ---
 
-## 📝 Publishing Updates
+## 🧰 Requirements
 
-```bash
-# Update version
-npm version patch  # or minor, or major
-
-# Rebuild
-npm run compile
-
-# Publish to npm
-npm publish
-```
+- **Node.js** v18 or higher
+- **Git** — must be installed and in your PATH
+- **GitHub PAT** — optional, only needed for GitHub push. [Create one here →](https://github.com/settings/tokens/new?scopes=repo&description=ZeroStart%20CLI%20Token)
 
 ---
 
 ## 🐛 Troubleshooting
 
-### "zerostart: command not found"
-
-**Problem:** You installed without the `-g` flag.
-
-**Solution:**
+**`zerostart: command not found`**
 ```bash
-# Remove local installation
-rm -rf node_modules package-lock.json
-
-# Install globally
+# You missed the -g flag. Fix it:
 npm install -g zerostart-cli
 ```
 
-### "Git is not installed"
+**`Git is not installed`**
+→ Download and install Git from [git-scm.com](https://git-scm.com/)
 
-**Problem:** Git is not in your system PATH.
+**`GitHub repository creation failed`**
+→ Make sure your token has the `repo` scope. [Generate a new token →](https://github.com/settings/tokens)
 
-**Solution:** Install Git from [git-scm.com](https://git-scm.com/) and ensure it's in your PATH.
+---
 
-### "GitHub repository creation failed"
+## 🔧 Development
 
-**Problem:** Invalid or insufficient GitHub token permissions.
+```bash
+# Clone the repo
+git clone https://github.com/KushaalNayak/ZeroStart-cli.git
+cd ZeroStart-cli
 
-**Solution:** Generate a new token with `repo` scope from GitHub settings.
+# Install dependencies
+npm install
+
+# Build
+npm run compile
+
+# Run locally
+node ./out/cli.js
+```
+
+### Source Structure
+
+```
+src/
+├── cli.ts                    ← CLI entry point & all commands
+├── types.ts                  ← TypeScript enums & interfaces
+├── managers/
+│   ├── TemplateManager.ts    ← Project file scaffolding
+│   ├── GitManager.ts         ← Git & GitHub operations
+│   ├── ProjectManager.ts     ← Orchestration
+│   ├── VercelManager.ts      ← Vercel deployment
+│   └── NetlifyManager.ts     ← Netlify deployment
+└── services/
+    └── GitHubServiceCLI.ts   ← GitHub REST API client
+```
 
 ---
 
 ## 📄 License
 
-MIT
+MIT © [ZeroStart](https://zerostart.zeroonedevs.in)
 
 ---
 
 ## 🤝 Contributing
 
-Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
+PRs and issues are welcome!
+Open one at [github.com/KushaalNayak/ZeroStart-cli](https://github.com/KushaalNayak/ZeroStart-cli/issues)
 
 ---
 
-## 📧 Support
-
-- 📦 npm: [zerostart-cli](https://www.npmjs.com/package/zerostart-cli)
-- 🐙 GitHub: [Issues](https://github.com/yourusername/zerostart-cli/issues)
-
----
-
-**Made with ❤️ by ZeroStart Team**
-
-
-
-
-
-
-
-
-
-
-
+> **Made with ❤️ by the ZeroStart team — [zerostart.zeroonedevs.in](https://zerostart.zeroonedevs.in)**
