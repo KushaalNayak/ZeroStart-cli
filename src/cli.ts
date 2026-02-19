@@ -24,6 +24,10 @@ function showBanner() {
     console.log(chalk.bold.white('                    ZeroStart CLI                       '));
     console.log(chalk.gray('          Create and deploy projects in seconds            '));
     console.log(chalk.cyan('------------------------------------------------------------'));
+    console.log(chalk.gray('  🌐 Website: ') + chalk.cyan.underline('https://zerostart.zeroonedevs.in'));
+    console.log(chalk.gray('  📦 npm:     ') + chalk.cyan('zerostart-cli') + chalk.gray('  |  ') + chalk.gray('v0.0.41'));
+    console.log(chalk.cyan('------------------------------------------------------------'));
+    console.log();
 }
 
 function openUrl(url: string) {
@@ -163,7 +167,7 @@ async function initializeProject(
 program
     .name('zerostart')
     .description('Create and deploy a complete project with one command')
-    .version('0.0.38');
+    .version('0.0.41');
 
 // zerostart init [project-name]
 program
@@ -511,7 +515,7 @@ program
             }
 
             const latestVersion = stdout.trim();
-            const currentVersion = '0.0.38';
+            const currentVersion = '0.0.41';
 
             if (latestVersion === currentVersion) {
                 spinner.succeed(chalk.green('You are using the latest version!'));
@@ -525,11 +529,14 @@ program
 // zerostart docs
 program
     .command('docs')
-    .description('Open comprehensive documentation in your browser')
+    .description('Open the ZeroStart website and documentation in your browser')
     .action(() => {
         showBanner();
-        const docsUrl = 'https://github.com/yourusername/zerostart-cli#readme';
-        console.log(chalk.cyan('  Opening documentation...'));
+        const docsUrl = 'https://zerostart.zeroonedevs.in';
+        console.log(chalk.bold.cyan('  🌐 Opening ZeroStart website...'));
+        console.log(chalk.gray('  URL: ') + chalk.cyan.underline(docsUrl));
+        console.log();
+        console.log(chalk.gray('  Explore commands, templates, and deployment guides at the site.'));
         openUrl(docsUrl);
     });
 
