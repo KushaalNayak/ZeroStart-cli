@@ -1,6 +1,10 @@
 
 export enum ProjectLanguage {
     React = 'React',
+    Nextjs = 'Next.js',
+    Vue = 'Vue',
+    Svelte = 'Svelte',
+    Express = 'Express',
     TypeScript = 'TypeScript',
     HTMLCSS = 'HTML/CSS',
     Python = 'Python',

@@ -32,6 +32,18 @@ export class TemplateManager {
             case ProjectLanguage.React:
                 await this.createReactStructure(config);
                 break;
+            case ProjectLanguage.Nextjs:
+                await this.createNextjsStructure(config);
+                break;
+            case ProjectLanguage.Vue:
+                await this.createVueStructure(config);
+                break;
+            case ProjectLanguage.Svelte:
+                await this.createSvelteStructure(config);
+                break;
+            case ProjectLanguage.Express:
+                await this.createExpressStructure(config);
+                break;
             case ProjectLanguage.TypeScript:
                 await this.createTypeScriptStructure(config);
                 break;
@@ -157,8 +169,12 @@ npm start # or python main.py / java -jar target/app.jar
         let content = '';
         switch (config.language) {
             case ProjectLanguage.React:
+            case ProjectLanguage.Nextjs:
+            case ProjectLanguage.Vue:
+            case ProjectLanguage.Svelte:
+            case ProjectLanguage.Express:
             case ProjectLanguage.TypeScript:
-                content = 'node_modules/\n.env\ndist/\nbuild/';
+                content = 'node_modules/\n.env\ndist/\nbuild/\n.next/\n.svelte-kit/';
                 break;
             case ProjectLanguage.Python:
                 content = '__pycache__/\n*.pyc\nvenv/\n.env';
@@ -383,6 +399,311 @@ console.log("${config.name} initialized!");
   publish = "."
 `;
         fs.writeFileSync(path.join(config.path, 'netlify.toml'), netlifyContent);
+    }
+
+    private async createNextjsStructure(config: ProjectConfig) {
+        const packageJson = {
+            name: config.name,
+            version: "0.1.0",
+            private: true,
+            scripts: {
+                dev: "next dev",
+                build: "next build",
+                start: "next start",
+                lint: "next lint"
+            },
+            dependencies: {
+                "next": "14.1.0",
+                "react": "^18",
+                "react-dom": "^18"
+            },
+            devDependencies: {
+                "typescript": "^5",
+                "@types/node": "^20",
+                "@types/react": "^18",
+                "@types/react-dom": "^18",
+                "autoprefixer": "^10.0.1",
+                "postcss": "^8",
+                "tailwindcss": "^3.3.0",
+                "eslint": "^8",
+                "eslint-config-next": "14.1.0"
+            }
+        };
+        fs.writeFileSync(path.join(config.path, 'package.json'), JSON.stringify(packageJson, null, 2));
+
+        const app = path.join(config.path, 'app');
+        if (!fs.existsSync(app)) fs.mkdirSync(app);
+
+        fs.writeFileSync(path.join(app, 'layout.tsx'), `
+import type { Metadata } from "next";
+import "./globals.css";
+
+export const metadata: Metadata = {
+  title: "${config.name}",
+  description: "${config.description}",
+};
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return (
+    <html lang="en">
+      <body>{children}</body>
+    </html>
+  );
+}
+`);
+        fs.writeFileSync(path.join(app, 'page.tsx'), `
+export default function Home() {
+  return (
+    <main className="flex min-h-screen flex-col items-center justify-between p-24">
+      <h1 className="text-4xl font-bold">Welcome to ${config.name} (Next.js)</h1>
+    </main>
+  );
+}
+`);
+        fs.writeFileSync(path.join(app, 'globals.css'), `
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+`);
+        fs.writeFileSync(path.join(config.path, 'tailwind.config.ts'), `
+import type { Config } from "tailwindcss";
+
+const config: Config = {
+  content: [
+    "./pages/**/*.{js,ts,jsx,tsx,mdx}",
+    "./components/**/*.{js,ts,jsx,tsx,mdx}",
+    "./app/**/*.{js,ts,jsx,tsx,mdx}",
+  ],
+  theme: {
+    extend: {},
+  },
+  plugins: [],
+};
+export default config;
+`);
+        fs.writeFileSync(path.join(config.path, 'next.config.mjs'), `
+/** @type {import('next').NextConfig} */
+const nextConfig = {};
+
+export default nextConfig;
+`);
+        fs.writeFileSync(path.join(config.path, 'tsconfig.json'), `
+{
+  "compilerOptions": {
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": ["./*"]
+    }
+  },
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "exclude": ["node_modules"]
+}
+`);
+        this.createNetlifyConfig(config);
+    }
+
+    private async createVueStructure(config: ProjectConfig) {
+        const packageJson = {
+            name: config.name,
+            version: "0.0.0",
+            private: true,
+            type: "module",
+            scripts: {
+                dev: "vite",
+                build: "vue-tsc && vite build",
+                preview: "vite preview"
+            },
+            dependencies: {
+                "vue": "^3.4.15"
+            },
+            devDependencies: {
+                "@vitejs/plugin-vue": "^5.0.3",
+                "typescript": "^5.3.3",
+                "vite": "^5.0.12",
+                "vue-tsc": "^1.8.27"
+            }
+        };
+        fs.writeFileSync(path.join(config.path, 'package.json'), JSON.stringify(packageJson, null, 2));
+
+        const src = path.join(config.path, 'src');
+        if (!fs.existsSync(src)) fs.mkdirSync(src);
+
+        fs.writeFileSync(path.join(src, 'App.vue'), `
+<template>
+  <div>
+    <h1>Hello Vue 3 + Vite!</h1>
+  </div>
+</template>
+`);
+        fs.writeFileSync(path.join(src, 'main.ts'), `
+import { createApp } from 'vue'
+import App from './App.vue'
+
+createApp(App).mount('#app')
+`);
+        fs.writeFileSync(path.join(config.path, 'index.html'), `
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>${config.name}</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
+`);
+        fs.writeFileSync(path.join(config.path, 'vite.config.ts'), `
+import { defineConfig } from 'vite'
+import vue from '@vitejs/plugin-vue'
+
+export default defineConfig({
+  plugins: [vue()],
+})
+`);
+        this.createNetlifyConfig(config);
+    }
+
+    private async createSvelteStructure(config: ProjectConfig) {
+        const packageJson = {
+            name: config.name,
+            version: "0.0.1",
+            private: true,
+            type: "module",
+            scripts: {
+                dev: "vite",
+                build: "vite build",
+                preview: "vite preview",
+                check: "svelte-check --tsconfig ./tsconfig.json"
+            },
+            devDependencies: {
+                "@sveltejs/vite-plugin-svelte": "^3.0.1",
+                "@tsconfig/svelte": "^5.0.2",
+                "svelte": "^4.2.9",
+                "svelte-check": "^3.6.3",
+                "tslib": "^2.6.2",
+                "typescript": "^5.3.3",
+                "vite": "^5.0.12"
+            }
+        };
+        fs.writeFileSync(path.join(config.path, 'package.json'), JSON.stringify(packageJson, null, 2));
+
+        const src = path.join(config.path, 'src');
+        if (!fs.existsSync(src)) fs.mkdirSync(src);
+
+        fs.writeFileSync(path.join(src, 'App.svelte'), `
+<script lang="ts">
+  let name = "${config.name}";
+</script>
+
+<main>
+  <h1>Hello {name} (Svelte)</h1>
+</main>
+`);
+        fs.writeFileSync(path.join(src, 'main.ts'), `
+import './app.css'
+import App from './App.svelte'
+
+const app = new App({
+  target: document.getElementById('app')!,
+})
+
+export default app
+`);
+        fs.writeFileSync(path.join(src, 'app.css'), `
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+}
+`);
+        fs.writeFileSync(path.join(config.path, 'index.html'), `
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>${config.name}</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
+`);
+        fs.writeFileSync(path.join(config.path, 'vite.config.ts'), `
+import { defineConfig } from 'vite'
+import { svelte } from '@sveltejs/vite-plugin-svelte'
+
+export default defineConfig({
+  plugins: [svelte()],
+})
+`);
+        this.createNetlifyConfig(config);
+    }
+
+    private async createExpressStructure(config: ProjectConfig) {
+        const packageJson = {
+            name: config.name,
+            version: "1.0.0",
+            description: config.description,
+            main: "src/index.js",
+            scripts: {
+                start: "node src/index.js",
+                dev: "nodemon src/index.js"
+            },
+            dependencies: {
+                "express": "^4.18.2",
+                "cors": "^2.8.5",
+                "dotenv": "^16.3.1"
+            },
+            devDependencies: {
+                "nodemon": "^3.0.2"
+            }
+        };
+        fs.writeFileSync(path.join(config.path, 'package.json'), JSON.stringify(packageJson, null, 2));
+
+        const src = path.join(config.path, 'src');
+        if (!fs.existsSync(src)) fs.mkdirSync(src);
+
+        fs.writeFileSync(path.join(src, 'index.js'), `
+const express = require('express');
+const cors = require('cors');
+require('dotenv').config();
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+app.use(cors());
+app.use(express.json());
+
+app.get('/', (req, res) => {
+  res.json({ message: 'Welcome to ${config.name} API' });
+});
+
+app.listen(PORT, () => {
+  console.log(\`Server is running on http://localhost:\${PORT}\`);
+});
+`);
+        fs.writeFileSync(path.join(config.path, '.env'), "PORT=3000\n");
     }
 
     private createNetlifyConfig(config: ProjectConfig) {

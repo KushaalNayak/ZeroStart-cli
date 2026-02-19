@@ -576,6 +576,10 @@ const shortcuts = [
     { cmd: 'dsa-java', lang: ProjectLanguage.Java, type: ProjectType.DSAPractice },
     { cmd: 'dsa-cpp', lang: ProjectLanguage.CPP, type: ProjectType.DSAPractice },
     { cmd: 'web-react', lang: ProjectLanguage.React, type: ProjectType.WebApp },
+    { cmd: 'web-next', lang: ProjectLanguage.Nextjs, type: ProjectType.WebApp },
+    { cmd: 'web-vue', lang: ProjectLanguage.Vue, type: ProjectType.WebApp },
+    { cmd: 'web-svelte', lang: ProjectLanguage.Svelte, type: ProjectType.WebApp },
+    { cmd: 'web-express', lang: ProjectLanguage.Express, type: ProjectType.WebApp },
     { cmd: 'web-html', lang: ProjectLanguage.HTMLCSS, type: ProjectType.WebApp },
     { cmd: 'web-py', lang: ProjectLanguage.Python, type: ProjectType.WebApp },
     { cmd: 'web-java', lang: ProjectLanguage.Java, type: ProjectType.WebApp },
@@ -630,7 +634,17 @@ async function startWizard(initialName?: string) {
             // ── STEP 2: Language ────────────────────────────────────────────────
         } else if (step === 2) {
             const langChoices = category === CAT_WEB
-                ? [ProjectLanguage.React, ProjectLanguage.TypeScript, ProjectLanguage.HTMLCSS, new inquirer.Separator(), BACK]
+                ? [
+                    ProjectLanguage.React,
+                    ProjectLanguage.Nextjs,
+                    ProjectLanguage.Vue,
+                    ProjectLanguage.Svelte,
+                    ProjectLanguage.Express,
+                    ProjectLanguage.TypeScript,
+                    ProjectLanguage.HTMLCSS,
+                    new inquirer.Separator(),
+                    BACK
+                ]
                 : [ProjectLanguage.CPP, ProjectLanguage.Java, ProjectLanguage.Python, new inquirer.Separator(), BACK];
 
             const langAns = await inquirer.prompt([{
@@ -802,11 +816,17 @@ async function startWizard(initialName?: string) {
         } else if (category === CAT_WEB && deployChoice === 'local') {
             console.log();
             console.log(chalk.bold.cyan('  💻 Run your project locally:'));
-            if (language === ProjectLanguage.React || language === ProjectLanguage.TypeScript) {
+            if ([ProjectLanguage.React, ProjectLanguage.Nextjs, ProjectLanguage.Vue, ProjectLanguage.Svelte, ProjectLanguage.TypeScript].includes(language)) {
                 console.log(chalk.gray('  - ') + chalk.cyan(`cd ${name}`));
                 console.log(chalk.gray('  - ') + chalk.cyan('npm install'));
                 console.log(chalk.gray('  - ') + chalk.cyan('npm run dev'));
-                console.log(chalk.gray('\n  Then open: ') + chalk.cyan('http://localhost:5173'));
+                const port = language === ProjectLanguage.Nextjs ? '3000' : '5173';
+                console.log(chalk.gray('\n  Then open: ') + chalk.cyan(`http://localhost:${port}`));
+            } else if (language === ProjectLanguage.Express) {
+                console.log(chalk.gray('  - ') + chalk.cyan(`cd ${name}`));
+                console.log(chalk.gray('  - ') + chalk.cyan('npm install'));
+                console.log(chalk.gray('  - ') + chalk.cyan('npm run dev'));
+                console.log(chalk.gray('\n  Server running on: ') + chalk.cyan('http://localhost:3000'));
             } else if (language === ProjectLanguage.HTMLCSS) {
                 console.log(chalk.gray('  - ') + chalk.cyan(`cd ${name}`));
                 console.log(chalk.gray('  - ') + chalk.cyan('Open index.html in your browser'));
