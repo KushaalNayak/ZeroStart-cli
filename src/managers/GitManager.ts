@@ -34,6 +34,23 @@ export class GitManager {
         }
     }
 
+    /**
+     * Stage only specific files and commit them.
+     * Used for the first human-style commit (README, .gitignore etc.) before
+     * committing the rest of the project structure as a second commit.
+     */
+    public async commitSelective(cwd: string, files: string[], message: string) {
+        try {
+            for (const file of files) {
+                // git add is silent if the file doesn't exist — that's fine
+                await exec(`git add "${file}"`, { cwd }).catch(() => { });
+            }
+            await exec(`git commit -m "${message}" --allow-empty`, { cwd });
+        } catch (error: any) {
+            console.warn(`Selective git commit failed: ${error.message}`);
+        }
+    }
+
     public async addRemote(cwd: string, url: string) {
         try {
             await exec(`git remote add origin ${url}`, { cwd });

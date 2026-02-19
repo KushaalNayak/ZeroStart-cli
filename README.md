@@ -39,14 +39,13 @@ Then follow the interactive prompts!
 
 ## ✨ Features
 
-- 🎯 **Interactive CLI** - Guided prompts for project setup
-- 🌐 **Multiple Languages** - Node.js, React, Python, Java, C++
-- 📦 **Project Types** - Web App, CLI Tool, DSA Practice, ML Project
-- 🔧 **Auto-scaffolding** - Complete project structure generation
+- 🎯 **Interactive CLI** - Guided prompts for project setup with **Back** button support
+- 🌐 **Modern Templates** - React, TypeScript, HTML/CSS, C++, Java, Python
+- 🚀 **Online GDB Support** - Instant browser redirect for Java, C++, and Python
+- 📦 **Auto-scaffolding** - Complete project structure generation
 - 📝 **Documentation** - Auto-generated README, roadmap, .gitignore
-- 🔄 **Git Integration** - Automatic Git initialization and first commit
-- 🐙 **GitHub Integration** - Create and push to GitHub repository
-- 🔒 **Visibility Control** - Choose public or private repositories
+- 🐙 **GitHub Integration** - Secure PAT-based creation and push
+- 🔒 **Vercel Deployment** - Instant deployment prompt for HTML projects
 
 ---
 
@@ -70,14 +69,14 @@ zerostart --help
 
 ### Shortcut Commands ⚡
 
-Skip the wizard and build instantly with these shortcuts:
+Skip the wizard and build instantly:
 
 | Category | Shortcut Commands |
 | :--- | :--- |
-| **DSA Practice** | `dsa-py`, `dsa-java`, `dsa-cpp`, `dsa-node` |
-| **Web Apps** | `web-react`, `web-html`, `web-node`, `web-py`, `web-java`, `web-cpp` |
-| **CLI Tools** | `cli-py`, `cli-node`, `cli-java`, `cli-cpp` |
-| **ML Projects** | `ml-py`, `ml-node`, `ml-java`, `ml-cpp` |
+| **DSA Practice** | `dsa-py`, `dsa-java`, `dsa-cpp` |
+| **Web Apps** | `web-react`, `web-html`, `web-py`, `web-java`, `web-cpp` |
+| **CLI Tools** | `cli-py`, `cli-java`, `cli-cpp` |
+| **ML Projects** | `ml-py`, `ml-java`, `ml-cpp` |
 
 **Example Usage**:
 ```bash
@@ -85,14 +84,10 @@ zerostart dsa-cpp my-calculator
 ```
 
 ### Standalone Deployment
-Retry deployments or deploy existing projects without scaffolding:
 
 ```bash
-# Deploy to Vercel (Login -> Deploy)
+# Deploy the current project to Vercel
 zerostart deploy-vercel
-
-# Deploy to Netlify (Login -> Deploy)
-zerostart deploy-netlify
 ```
 
 ### Example Workflow

@@ -43,7 +43,13 @@ function showGitHubTokenHelp() {
     openUrl(tokenUrl);
 }
 
-async function initializeProject(name: string, language: ProjectLanguage, type: ProjectType, options: { isPublic: boolean; createRemote: boolean; githubToken: string | null; authMethod: string }) {
+async function initializeProject(
+    name: string,
+    language: ProjectLanguage,
+    type: ProjectType,
+    options: { isPublic: boolean; createRemote: boolean; githubToken: string | null; authMethod: string }
+): Promise<string> {
+    // Returns the project path so the wizard can continue with deploy steps
     const cwd = process.cwd();
     const projectPath = path.join(cwd, name);
 
@@ -70,20 +76,26 @@ async function initializeProject(name: string, language: ProjectLanguage, type: 
 
         if (!await gitManager.checkGitInstalled()) {
             spinner.fail(chalk.red('Git is not installed!'));
-            return;
+            return projectPath;
         }
 
+        // ── Step 1: Create project files ────────────────────────────────────
         spinner.text = chalk.cyan('Generating project structure...');
         await templateManager.createProjectStructure(config);
         spinner.succeed(chalk.green('Project structure created'));
 
         if (type !== ProjectType.DSAPractice) {
+            // ── Step 2: Git init + FIRST human commit ────────────────────────
             spinner.start(chalk.cyan('Initializing Git repository...'));
             await gitManager.init(projectPath);
-            await gitManager.commit(projectPath, "Initial commit");
-            spinner.succeed(chalk.green('Git repository initialized'));
+            // First commit: just README and .gitignore (base project skeleton)
+            await gitManager.commitSelective(projectPath, ['README.md', '.gitignore', 'roadmap.md'], 'feat: initialize project with ZeroStart CLI');
+            // Second commit: everything else (source files, config, etc.)
+            await gitManager.commit(projectPath, 'chore: add project structure and configuration files');
+            spinner.succeed(chalk.green('Git repository initialized (2 commits)'));
         }
 
+        // ── Step 3: Create GitHub remote if requested ─────────────────────
         if (options.createRemote) {
             spinner.start(chalk.cyan('Creating GitHub repository...'));
             let repoUrl: string | undefined;
@@ -99,50 +111,59 @@ async function initializeProject(name: string, language: ProjectLanguage, type: 
                 spinner.start(chalk.cyan('Pushing to GitHub...'));
                 if (options.authMethod !== 'GitHub CLI') await gitManager.addRemote(projectPath, repoUrl);
                 await gitManager.push(projectPath);
-                spinner.succeed(chalk.green('Pushed to GitHub'));
+                spinner.succeed(chalk.green('Pushed to GitHub ✓'));
             } else {
-                spinner.warn(chalk.yellow('GitHub repository creation failed'));
+                spinner.warn(chalk.yellow('GitHub repository creation failed — continuing locally'));
             }
         }
 
         console.log();
-        console.log(chalk.bold.green('  Success! Your project is ready!'));
+        console.log(chalk.bold.green('  ✅ Success! Your project is ready!'));
         console.log(chalk.gray('  Location: ') + chalk.cyan(projectPath));
         console.log();
 
-        const isWeb = [ProjectLanguage.React, ProjectLanguage.HTMLCSS].includes(language);
-        const isPractice = type === ProjectType.DSAPractice;
-
-        if (!isWeb || isPractice) {
+        // ── CP languages: open browser + interactive terminal ─────────────
+        if ([ProjectLanguage.Python, ProjectLanguage.Java, ProjectLanguage.CPP].includes(language)) {
             const gdbLinks: Record<string, string> = {
                 [ProjectLanguage.Python]: 'https://www.onlinegdb.com/online_python_compiler',
                 [ProjectLanguage.Java]: 'https://www.onlinegdb.com/online_java_compiler',
-                [ProjectLanguage.CPP]: 'https://www.onlinegdb.com/online_c++_compiler',
-                [ProjectLanguage.NodeJS]: 'https://www.onlinegdb.com/online_node.js_compiler',
-                [ProjectLanguage.React]: 'https://www.onlinegdb.com/'
+                [ProjectLanguage.CPP]: 'https://www.onlinegdb.com/online_c++_compiler'
             };
-            const link = gdbLinks[language] || 'https://www.onlinegdb.com/';
+            const link = gdbLinks[language]!;
             console.log(chalk.bold.yellow('  Practice Online:'));
             console.log(chalk.gray('  - ') + chalk.cyan(link));
             console.log(chalk.gray('  (Opening in your browser...)'));
             openUrl(link);
-            return;
+
+            const terminalCmds: Record<string, string> = {
+                [ProjectLanguage.Python]: 'start cmd /k "python"',
+                [ProjectLanguage.Java]: `start cmd /k "cd /d ${projectPath} && javac src/main/java/com/example/Main.java && java -cp src/main/java com.example.Main"`,
+                [ProjectLanguage.CPP]: `start cmd /k "cd /d ${projectPath} && g++ main.cpp -o main && main"`,
+            };
+            const termCmd = terminalCmds[language];
+            if (termCmd) {
+                console.log(chalk.bold.yellow('  Opening interactive terminal...'));
+                exec(termCmd, { cwd: projectPath });
+            }
         }
 
-        console.log(chalk.bold('  Get started:'));
+        console.log(chalk.bold('\n  Get started:'));
         console.log(chalk.gray('  - ') + chalk.cyan(`cd ${name}`));
         console.log(chalk.gray('  - ') + chalk.cyan('code .') + chalk.gray(' (or your favorite editor)'));
         console.log();
 
+        return projectPath;
+
     } catch (error: any) {
         spinner.fail(chalk.red('Error: ' + error.message));
+        return projectPath;
     }
 }
 
 program
     .name('zerostart')
     .description('Create and deploy a complete project with one command')
-    .version('0.0.36');
+    .version('0.0.38');
 
 // zerostart init [project-name]
 program
@@ -150,19 +171,7 @@ program
     .description('Initialize a new project with interactive prompts')
     .action(async (projectName) => {
         showBanner();
-        const answers: any = await inquirer.prompt([
-            { type: 'input', name: 'name', message: 'Project Name:', when: !projectName, default: 'my-project' },
-            { type: 'list', name: 'language', message: 'Language:', choices: Object.values(ProjectLanguage) },
-            { type: 'list', name: 'type', message: 'Type:', choices: Object.values(ProjectType) },
-            { type: 'list', name: 'createRemote', message: 'Push to GitHub?', choices: ['Yes', 'No'], default: 'No', when: (ans) => ans.type !== ProjectType.DSAPractice }
-        ]);
-
-        await initializeProject(projectName || answers.name, answers.language, answers.type, {
-            isPublic: false,
-            createRemote: answers.createRemote === 'Yes',
-            githubToken: null,
-            authMethod: 'none'
-        });
+        await startWizard(projectName);
     });
 
 // zerostart deploy
@@ -502,7 +511,7 @@ program
             }
 
             const latestVersion = stdout.trim();
-            const currentVersion = '0.0.36';
+            const currentVersion = '0.0.38';
 
             if (latestVersion === currentVersion) {
                 spinner.succeed(chalk.green('You are using the latest version!'));
@@ -554,24 +563,20 @@ program
         }
     });
 
-// Shortcut commands (18 total)
+// Shortcut commands (Removed Node.js shortcuts)
 const shortcuts = [
     { cmd: 'dsa-py', lang: ProjectLanguage.Python, type: ProjectType.DSAPractice },
     { cmd: 'dsa-java', lang: ProjectLanguage.Java, type: ProjectType.DSAPractice },
     { cmd: 'dsa-cpp', lang: ProjectLanguage.CPP, type: ProjectType.DSAPractice },
-    { cmd: 'dsa-node', lang: ProjectLanguage.NodeJS, type: ProjectType.DSAPractice },
     { cmd: 'web-react', lang: ProjectLanguage.React, type: ProjectType.WebApp },
     { cmd: 'web-html', lang: ProjectLanguage.HTMLCSS, type: ProjectType.WebApp },
-    { cmd: 'web-node', lang: ProjectLanguage.NodeJS, type: ProjectType.WebApp },
     { cmd: 'web-py', lang: ProjectLanguage.Python, type: ProjectType.WebApp },
     { cmd: 'web-java', lang: ProjectLanguage.Java, type: ProjectType.WebApp },
     { cmd: 'web-cpp', lang: ProjectLanguage.CPP, type: ProjectType.WebApp },
     { cmd: 'cli-py', lang: ProjectLanguage.Python, type: ProjectType.CLITool },
-    { cmd: 'cli-node', lang: ProjectLanguage.NodeJS, type: ProjectType.CLITool },
     { cmd: 'cli-java', lang: ProjectLanguage.Java, type: ProjectType.CLITool },
     { cmd: 'cli-cpp', lang: ProjectLanguage.CPP, type: ProjectType.CLITool },
     { cmd: 'ml-py', lang: ProjectLanguage.Python, type: ProjectType.MLProject },
-    { cmd: 'ml-node', lang: ProjectLanguage.NodeJS, type: ProjectType.MLProject },
     { cmd: 'ml-java', lang: ProjectLanguage.Java, type: ProjectType.MLProject },
     { cmd: 'ml-cpp', lang: ProjectLanguage.CPP, type: ProjectType.MLProject },
 ];
@@ -583,23 +588,237 @@ shortcuts.forEach(s => {
     });
 });
 
+async function startWizard(initialName?: string) {
+    // ── Wizard Steps ────────────────────────────────────────────────────────
+    // 1 → What are you building? (Web Dev / CP)
+    // 2 → Select Language
+    // 3 → Project Name
+    // 4 → [Web Dev only] Create GitHub repo? (Yes/No)
+    // 5 → [Web Dev + GitHub=Yes] Enter GitHub token
+    // 6 → [Web Dev only] Run locally OR Deploy to Vercel?
+    // ────────────────────────────────────────────────────────────────────────
+    let step = 1;
+    let name = initialName;
+    let category: string | undefined;
+    let language: ProjectLanguage | undefined;
+    let github = false;
+    let githubToken: string | null = null;
+
+    const BACK = '< Back';
+    const CAT_WEB = '🌐 Web Development (React, TS, HTML/CSS)';
+    const CAT_CP = '🏆 Competitive Programming (C++, Java, Python)';
+
+    while (step > 0 && step <= 6) {
+        // ── STEP 1: Category ────────────────────────────────────────────────
+        if (step === 1) {
+            const ans = await inquirer.prompt([{
+                type: 'list',
+                name: 'category',
+                message: 'What are you building?',
+                choices: [CAT_WEB, CAT_CP]
+            }]);
+            category = ans.category;
+            step++;
+
+            // ── STEP 2: Language ────────────────────────────────────────────────
+        } else if (step === 2) {
+            const langChoices = category === CAT_WEB
+                ? [ProjectLanguage.React, ProjectLanguage.TypeScript, ProjectLanguage.HTMLCSS, new inquirer.Separator(), BACK]
+                : [ProjectLanguage.CPP, ProjectLanguage.Java, ProjectLanguage.Python, new inquirer.Separator(), BACK];
+
+            const langAns = await inquirer.prompt([{
+                type: 'list',
+                name: 'language',
+                message: 'Select Language:',
+                choices: langChoices
+            }]);
+
+            if (langAns.language === BACK) { step--; }
+            else { language = langAns.language; step++; }
+
+            // ── STEP 3: Project Name ────────────────────────────────────────────
+        } else if (step === 3) {
+            if (!name) {
+                const ans = await inquirer.prompt([{
+                    type: 'input',
+                    name: 'name',
+                    message: 'Project Name:',
+                    default: 'my-project',
+                    validate: (v: string) => v.trim().length > 0 || 'Name cannot be empty'
+                }]);
+                name = ans.name.trim();
+            }
+            step++;
+
+            // ── STEP 4: GitHub repo? (Web Dev only) ────────────────────────────
+        } else if (step === 4) {
+            if (category === CAT_WEB) {
+                const ans = await inquirer.prompt([{
+                    type: 'list',
+                    name: 'github',
+                    message: 'Create a GitHub repository for this project?',
+                    choices: [
+                        { name: '✅ Yes — push to GitHub', value: 'yes' },
+                        { name: '❌ No — keep it local', value: 'no' },
+                        new inquirer.Separator(),
+                        { name: BACK, value: 'back' }
+                    ],
+                    default: 'yes'
+                }]);
+
+                if (ans.github === 'back') {
+                    name = undefined;
+                    step--;
+                } else {
+                    github = ans.github === 'yes';
+                    step++;
+                }
+            } else {
+                // CP projects skip straight to done
+                github = false;
+                step = 7; // jump past all web dev steps
+            }
+
+            // ── STEP 5: GitHub Token ────────────────────────────────────────────
+        } else if (step === 5) {
+            if (github) {
+                showGitHubTokenHelp();
+                console.log(chalk.gray('  💡 Tip: ') + chalk.white('Your token can be saved and reused for all future ZeroStart projects.'));
+                console.log(chalk.gray('  💡 Tip: ') + chalk.white('Scopes needed: ') + chalk.cyan('repo'));
+                console.log();
+
+                const tokenAns = await inquirer.prompt([{
+                    type: 'password',
+                    name: 'token',
+                    message: 'Paste your GitHub Personal Access Token:',
+                    validate: (input: string) => {
+                        if (input.toLowerCase() === 'back') return true;
+                        if (input.trim().length < 10) return 'That doesn\'t look like a valid token';
+                        return true;
+                    }
+                }]);
+
+                if (tokenAns.token.toLowerCase() === 'back') {
+                    step--;
+                } else {
+                    // Validate token immediately
+                    const spinner = ora({ text: 'Validating token...', color: 'cyan' }).start();
+                    const svc = new GitHubServiceCLI(tokenAns.token);
+                    const user = await svc.validateToken();
+                    if (user) {
+                        spinner.succeed(chalk.green(`Token valid! Logged in as @${user.login}`));
+                        githubToken = tokenAns.token;
+                        step++;
+                    } else {
+                        spinner.fail(chalk.red('Invalid token or no internet. Please try again.'));
+                        // Stay on step 5 to retry
+                    }
+                }
+            } else {
+                step++; // No GitHub — skip token step
+            }
+
+            // ── STEP 6: Run locally or Deploy to Vercel? (Web Dev only) ────────
+        } else if (step === 6) {
+            const deployAns = await inquirer.prompt([{
+                type: 'list',
+                name: 'action',
+                message: 'What do you want to do next?',
+                choices: [
+                    { name: '🚀 Deploy to Vercel (live URL in seconds)', value: 'vercel' },
+                    { name: '💻 Run locally first (I\'ll deploy later)', value: 'local' },
+                    new inquirer.Separator(),
+                    { name: BACK, value: 'back' }
+                ],
+                default: 'local'
+            }]);
+
+            if (deployAns.action === 'back') {
+                step--;
+            } else {
+                // Store deploy choice and break out of loop
+                (startWizard as any)._deployChoice = deployAns.action;
+                step++;
+            }
+        }
+    }
+
+    // ── Execute the project creation ─────────────────────────────────────────
+    if ((step > 6 || step === 7) && name && language) {
+        let type = ProjectType.WebApp;
+        if (language === ProjectLanguage.TypeScript) type = ProjectType.CLITool;
+        if (category === CAT_CP) type = ProjectType.DSAPractice;
+
+        const projectPath = await initializeProject(name, language, type, {
+            isPublic: false,
+            createRemote: !!githubToken,
+            githubToken,
+            authMethod: 'none'
+        });
+
+        // ── Post-creation: Web Dev deploy / local run ─────────────────────
+        const deployChoice = (startWizard as any)._deployChoice;
+        delete (startWizard as any)._deployChoice;
+
+        if (category === CAT_WEB && deployChoice === 'vercel') {
+            console.log();
+            console.log(chalk.bold.cyan('  🚀 Starting Vercel deployment...'));
+            console.log(chalk.gray('  This will be tagged as a demo deployment from ZeroStart CLI'));
+            console.log();
+
+            const vercelManager = new VercelManager();
+            const isInstalled = await vercelManager.checkVercelInstalled();
+            if (!isInstalled) {
+                const installSpinner = ora({ text: 'Installing Vercel CLI...', color: 'cyan' }).start();
+                await vercelManager.installGlobal();
+                installSpinner.succeed(chalk.green('Vercel CLI installed'));
+            }
+
+            const isAuthed = await vercelManager.checkAuth();
+            if (!isAuthed) {
+                console.log(chalk.yellow('  You need to log in to Vercel first. Opening login...'));
+                await vercelManager.login();
+            }
+
+            const deploySpinner = ora({ text: `Deploying ${name} to Vercel...`, color: 'cyan' }).start();
+            const url = await vercelManager.deploy(projectPath, name);
+            if (url) {
+                deploySpinner.succeed(chalk.green('Deployed successfully!'));
+                console.log();
+                console.log(chalk.bold('  🌐 Live URL: ') + chalk.cyan.underline(url));
+                console.log(chalk.gray('  (Demo deployment via ZeroStart CLI — upgrade in Vercel dashboard)'));
+                openUrl(url);
+            } else {
+                deploySpinner.fail(chalk.red('Deployment failed. Run ' + chalk.white('vercel') + ' manually from project folder.'));
+            }
+
+        } else if (category === CAT_WEB && deployChoice === 'local') {
+            console.log();
+            console.log(chalk.bold.cyan('  💻 Run your project locally:'));
+            if (language === ProjectLanguage.React || language === ProjectLanguage.TypeScript) {
+                console.log(chalk.gray('  - ') + chalk.cyan(`cd ${name}`));
+                console.log(chalk.gray('  - ') + chalk.cyan('npm install'));
+                console.log(chalk.gray('  - ') + chalk.cyan('npm run dev'));
+                console.log(chalk.gray('\n  Then open: ') + chalk.cyan('http://localhost:5173'));
+            } else if (language === ProjectLanguage.HTMLCSS) {
+                console.log(chalk.gray('  - ') + chalk.cyan(`cd ${name}`));
+                console.log(chalk.gray('  - ') + chalk.cyan('Open index.html in your browser'));
+                console.log(chalk.gray('  - Or use: ') + chalk.cyan('npx serve .') + chalk.gray(' for a local server'));
+            }
+        }
+
+        console.log();
+        console.log(chalk.bold('  Get started:'));
+        console.log(chalk.gray('  - ') + chalk.cyan(`cd ${name}`));
+        console.log(chalk.gray('  - ') + chalk.cyan('code .') + chalk.gray(' (or your favorite editor)'));
+        console.log();
+    }
+}
+
 // Main wizard
 program.argument('[projectName]').action(async (projectName) => {
     showBanner();
-    let name = projectName;
-    const answers: any = await inquirer.prompt([
-        { type: 'input', name: 'name', message: 'Project Name:', skip: !!projectName, when: !projectName },
-        { type: 'list', name: 'language', message: 'Language:', choices: Object.values(ProjectLanguage) },
-        { type: 'list', name: 'type', message: 'Type:', choices: Object.values(ProjectType) },
-        { type: 'list', name: 'createRemote', message: 'Push to GitHub?', choices: ['Yes', 'No'], default: 'No', when: (ans) => ans.type !== ProjectType.DSAPractice }
-    ]);
-
-    await initializeProject(projectName || answers.name, answers.language, answers.type, {
-        isPublic: false,
-        createRemote: answers.createRemote === 'Yes',
-        githubToken: null,
-        authMethod: 'none'
-    });
+    await startWizard(projectName);
 });
 
 program.parse(process.argv);

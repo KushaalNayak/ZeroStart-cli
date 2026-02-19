@@ -1,7 +1,7 @@
 
 export enum ProjectLanguage {
-    NodeJS = 'Node.js',
     React = 'React',
+    TypeScript = 'TypeScript',
     HTMLCSS = 'HTML/CSS',
     Python = 'Python',
     Java = 'Java',

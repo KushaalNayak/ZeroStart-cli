@@ -20,9 +20,6 @@ export class TemplateManager {
 
         // Create language specific files
         switch (config.language) {
-            case ProjectLanguage.NodeJS:
-                await this.createNodeJSStructure(config);
-                break;
             case ProjectLanguage.Python:
                 await this.createPythonStructure(config);
                 break;
@@ -35,10 +32,54 @@ export class TemplateManager {
             case ProjectLanguage.React:
                 await this.createReactStructure(config);
                 break;
+            case ProjectLanguage.TypeScript:
+                await this.createTypeScriptStructure(config);
+                break;
             case ProjectLanguage.HTMLCSS:
                 await this.createHTMLCSSStructure(config);
                 break;
         }
+    }
+
+    private async createTypeScriptStructure(config: ProjectConfig) {
+        const packageJson = {
+            name: config.name,
+            version: "1.0.0",
+            description: config.description,
+            main: "dist/index.js",
+            scripts: {
+                build: "tsc",
+                start: "node dist/index.js",
+                dev: "ts-node src/index.ts",
+                test: "echo \"Error: no test specified\" && exit 1"
+            },
+            devDependencies: {
+                "typescript": "^5.3.3",
+                "ts-node": "^10.9.2",
+                "@types/node": "^20.11.0"
+            }
+        };
+        fs.writeFileSync(path.join(config.path, 'package.json'), JSON.stringify(packageJson, null, 2));
+
+        const src = path.join(config.path, 'src');
+        if (!fs.existsSync(src)) fs.mkdirSync(src);
+
+        fs.writeFileSync(path.join(src, 'index.ts'), 'console.log("Hello from TypeScript!");');
+
+        fs.writeFileSync(path.join(config.path, 'tsconfig.json'), `{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "CommonJS",
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true
+  },
+  "include": ["src/**/*"]
+}
+`);
     }
 
     private createTypeSpecificStructure(config: ProjectConfig) {
@@ -115,8 +156,8 @@ npm start # or python main.py / java -jar target/app.jar
     private createGitIgnore(config: ProjectConfig) {
         let content = '';
         switch (config.language) {
-            case ProjectLanguage.NodeJS:
             case ProjectLanguage.React:
+            case ProjectLanguage.TypeScript:
                 content = 'node_modules/\n.env\ndist/\nbuild/';
                 break;
             case ProjectLanguage.Python:
@@ -130,24 +171,6 @@ npm start # or python main.py / java -jar target/app.jar
                 break;
         }
         fs.writeFileSync(path.join(config.path, '.gitignore'), content);
-    }
-
-    private async createNodeJSStructure(config: ProjectConfig) {
-        const packageJson = {
-            name: config.name,
-            version: "1.0.0",
-            description: config.description,
-            main: "index.js",
-            scripts: {
-                start: "node index.js",
-                test: "echo \"Error: no test specified\" && exit 1"
-            },
-            keywords: [],
-            author: "",
-            license: "ISC"
-        };
-        fs.writeFileSync(path.join(config.path, 'package.json'), JSON.stringify(packageJson, null, 2));
-        fs.writeFileSync(path.join(config.path, 'index.js'), 'console.log("Hello, World!");');
     }
 
     private async createPythonStructure(config: ProjectConfig) {
@@ -194,8 +217,6 @@ add_executable(${config.name} main.cpp)`;
     }
 
     private async createReactStructure(config: ProjectConfig) {
-        // Minimal React Setup (using Vite structure conceptually but minimal for file generation speed)
-        // Assuming users will run 'npm install' later
         const packageJson = {
             name: config.name,
             private: true,
@@ -358,8 +379,6 @@ h1 {
 console.log("${config.name} initialized!");
 `);
 
-        // No netlify.toml needed for static sites if direct deploy path is known, 
-        // but we'll create a simple one for consistency.
         const netlifyContent = `[build]
   publish = "."
 `;
@@ -367,8 +386,6 @@ console.log("${config.name} initialized!");
     }
 
     private createNetlifyConfig(config: ProjectConfig) {
-        // Only relevant for web apps (React, etc)
-        // For now, we assume Vite + React
         const content = `[build]
   command = "npm run build"
   publish = "dist"
