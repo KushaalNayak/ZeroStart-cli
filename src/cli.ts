@@ -13,6 +13,8 @@ import { GitHubServiceCLI } from './services/GitHubServiceCLI';
 import { VercelManager } from './managers/VercelManager';
 import { NetlifyManager } from './managers/NetlifyManager';
 import { exec } from 'child_process';
+import open from 'open';
+
 
 
 const program = new Command();
@@ -28,9 +30,9 @@ function showBanner() {
     console.log();
 }
 
-function openUrl(url: string) {
-    const start = (process.platform == 'darwin' ? 'open' : process.platform == 'win32' ? 'start' : 'xdg-open');
-    exec(`${start} "${url}"`);
+async function openUrl(url: string) {
+    console.log(chalk.cyan('🌐 Opening GitHub in your browser...'));
+    await open(url);
 }
 
 function showGitHubTokenHelp() {
