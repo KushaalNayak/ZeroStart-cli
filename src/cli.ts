@@ -23,9 +23,7 @@ function showBanner() {
     console.log(chalk.cyan('------------------------------------------------------------'));
     console.log(chalk.bold.white('                    ZeroStart CLI                       '));
     console.log(chalk.gray('          Create and deploy projects in seconds            '));
-    console.log(chalk.cyan('------------------------------------------------------------'));
-    console.log(chalk.gray('  🌐 Website: ') + chalk.cyan.underline('https://zerostart.zeroonedevs.in'));
-    console.log(chalk.gray('  📦 npm:     ') + chalk.cyan('zerostart-cli') + chalk.gray('  |  ') + chalk.gray('v0.0.41'));
+    console.log(chalk.gray('  📘 Docs: ') + chalk.cyan.underline('https://zerostart.zeroonedevs.in'));
     console.log(chalk.cyan('------------------------------------------------------------'));
     console.log();
 }
