@@ -25,25 +25,29 @@ npm install -g zerostart-cli
 
 ---
 
-## ⚡ Quick Start
+## ✨ Features
 
-```bash
-zerostart
-```
-
-That's it. Follow the interactive wizard to set up your project, push to GitHub, and optionally deploy to Vercel.
+- **🆕 AI Architect**: Build custom projects from a single sentence prompt.
+- **🚀 One-Command Setup**: Scaffold, initialize Git, and deploy in seconds.
+- **📦 Pre-built Templates**: React, Next.js, Express, C++, Java, Python, and more.
+- **🐙 GitHub Integration**: Auto-create repositories and push with human-style commits.
+- **🌐 Instant Deployment**: Vercel and Netlify support built-in.
 
 ---
 
-## ✨ What It Does
+## ⚡ Quick Start
 
-| Step | What Happens |
-| :--- | :--- |
-| 🎯 Pick a category | Web Dev or Competitive Programming |
-| 🔤 Pick a language | React, TypeScript, HTML/CSS, C++, Java, Python |
-| 📝 Name your project | Enter any project name |
-| 🐙 GitHub integration | Optionally create a repo and push with real commits |
-| 🚀 Deploy or run locally | Deploy to Vercel instantly, or get `cd` instructions |
+### 1. The Standard Way
+```bash
+zerostart
+```
+Follow the interactive wizard to set up your project.
+
+### 2. The AI Way (New!) ✨
+```bash
+zerostart ai "a simple blog with react and express"
+```
+Tell the AI what you want, and it will architect the entire project for you.
 
 ---
 
@@ -54,6 +58,7 @@ That's it. Follow the interactive wizard to set up your project, push to GitHub,
 | Command | Description |
 | :--- | :--- |
 | `zerostart` | Launch the full interactive wizard |
+| `zerostart ai [prompt]` | **AI Architect**: Build a project from a description |
 | `zerostart init [name]` | Start a new project (with optional name) |
 | `zerostart deploy` | Deploy the current project (Vercel / Netlify) |
 | `zerostart git` | Initialize Git + optionally push to GitHub |
