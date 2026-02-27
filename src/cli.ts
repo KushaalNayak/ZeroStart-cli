@@ -14,6 +14,8 @@ import { VercelManager } from './managers/VercelManager';
 import { NetlifyManager } from './managers/NetlifyManager';
 import { exec } from 'child_process';
 import open from 'open';
+import { handleAICommand } from './commands/ai';
+
 
 
 
@@ -177,6 +179,17 @@ program
         showBanner();
         await startWizard(projectName);
     });
+
+// zerostart ai
+program
+    .command('ai [prompt]')
+    .description('Generate a project using AI based on your description')
+    .action(async (prompt) => {
+        showBanner();
+        await handleAICommand(prompt);
+    });
+
+
 
 // zerostart deploy
 program
