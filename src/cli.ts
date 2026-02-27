@@ -169,7 +169,7 @@ async function initializeProject(
 program
     .name('zerostart')
     .description('Create and deploy a complete project with one command')
-    .version('0.0.44');
+    .version('0.0.45');
 
 // zerostart init [project-name]
 program
@@ -528,7 +528,7 @@ program
             }
 
             const latestVersion = stdout.trim();
-            const currentVersion = '0.0.44';
+            const currentVersion = '0.0.45';
 
             if (latestVersion === currentVersion) {
                 spinner.succeed(chalk.green('You are using the latest version!'));
