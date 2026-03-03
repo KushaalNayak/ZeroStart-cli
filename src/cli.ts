@@ -53,7 +53,13 @@ async function initializeProject(
     name: string,
     language: ProjectLanguage,
     type: ProjectType,
-    options: { isPublic: boolean; createRemote: boolean; githubToken: string | null; authMethod: string }
+    options: {
+        isPublic: boolean;
+        createRemote: boolean;
+        githubToken: string | null;
+        authMethod: string;
+        cpInterface?: 'online' | 'terminal' | 'both';
+    }
 ): Promise<string> {
     // Returns the project path so the wizard can continue with deploy steps
     const cwd = process.cwd();
@@ -129,27 +135,33 @@ async function initializeProject(
         console.log();
 
         // ── CP languages: open browser + interactive terminal ─────────────
-        if ([ProjectLanguage.Python, ProjectLanguage.Java, ProjectLanguage.CPP].includes(language)) {
-            const gdbLinks: Record<string, string> = {
-                [ProjectLanguage.Python]: 'https://www.onlinegdb.com/online_python_compiler',
-                [ProjectLanguage.Java]: 'https://www.onlinegdb.com/online_java_compiler',
-                [ProjectLanguage.CPP]: 'https://www.onlinegdb.com/online_c++_compiler'
-            };
-            const link = gdbLinks[language]!;
-            console.log(chalk.bold.yellow('  Practice Online:'));
-            console.log(chalk.gray('  - ') + chalk.cyan(link));
-            console.log(chalk.gray('  (Opening in your browser...)'));
-            openUrl(link);
+        if (type === ProjectType.DSAPractice && [ProjectLanguage.Python, ProjectLanguage.Java, ProjectLanguage.CPP].includes(language)) {
+            const cpChoice = options.cpInterface || 'both';
 
-            const terminalCmds: Record<string, string> = {
-                [ProjectLanguage.Python]: 'start cmd /k "python"',
-                [ProjectLanguage.Java]: `start cmd /k "cd /d ${projectPath} && javac src/main/java/com/example/Main.java && java -cp src/main/java com.example.Main"`,
-                [ProjectLanguage.CPP]: `start cmd /k "cd /d ${projectPath} && g++ main.cpp -o main && main"`,
-            };
-            const termCmd = terminalCmds[language];
-            if (termCmd) {
-                console.log(chalk.bold.yellow('  Opening interactive terminal...'));
-                exec(termCmd, { cwd: projectPath });
+            if (cpChoice === 'online' || cpChoice === 'both') {
+                const gdbLinks: Record<string, string> = {
+                    [ProjectLanguage.Python]: 'https://www.onlinegdb.com/online_python_compiler',
+                    [ProjectLanguage.Java]: 'https://www.onlinegdb.com/online_java_compiler',
+                    [ProjectLanguage.CPP]: 'https://www.onlinegdb.com/online_c++_compiler'
+                };
+                const link = gdbLinks[language]!;
+                console.log(chalk.bold.yellow('  Practice Online:'));
+                console.log(chalk.gray('  - ') + chalk.cyan(link));
+                console.log(chalk.gray('  (Opening in your browser...)'));
+                openUrl(link);
+            }
+
+            if (cpChoice === 'terminal' || cpChoice === 'both') {
+                const terminalCmds: Record<string, string> = {
+                    [ProjectLanguage.Python]: 'start cmd /k "python"',
+                    [ProjectLanguage.Java]: `start cmd /k "cd /d ${projectPath} && javac src/main/java/com/example/Main.java && java -cp src/main/java com.example.Main"`,
+                    [ProjectLanguage.CPP]: `start cmd /k "cd /d ${projectPath} && g++ main.cpp -o main && main"`,
+                };
+                const termCmd = terminalCmds[language];
+                if (termCmd) {
+                    console.log(chalk.bold.yellow('  Opening interactive terminal...'));
+                    exec(termCmd, { cwd: projectPath });
+                }
             }
         }
 
@@ -169,7 +181,7 @@ async function initializeProject(
 program
     .name('zerostart')
     .description('Create and deploy a complete project with one command')
-    .version('0.0.45');
+    .version('0.0.46');
 
 // zerostart init [project-name]
 program
@@ -528,7 +540,7 @@ program
             }
 
             const latestVersion = stdout.trim();
-            const currentVersion = '0.0.45';
+            const currentVersion = '0.0.46';
 
             if (latestVersion === currentVersion) {
                 spinner.succeed(chalk.green('You are using the latest version!'));
@@ -606,9 +618,32 @@ const shortcuts = [
 ];
 
 shortcuts.forEach(s => {
-    program.command(s.cmd).argument('[name]', 'Project name', `my-${s.cmd}`).action(n => {
+    program.command(s.cmd).argument('[name]', 'Project name', `my-${s.cmd}`).action(async (n) => {
         showBanner();
-        initializeProject(n, s.lang, s.type, { isPublic: false, createRemote: false, githubToken: null, authMethod: 'none' });
+        let cpInterface: 'online' | 'terminal' | 'both' = 'both';
+
+        if (s.type === ProjectType.DSAPractice) {
+            const ans = await inquirer.prompt([{
+                type: 'list',
+                name: 'cpInterface',
+                message: 'Choose Practice Interface:',
+                choices: [
+                    { name: '🌐 Online Compiler (browser)', value: 'online' },
+                    { name: '💻 Local Terminal (cmd)', value: 'terminal' },
+                    { name: '🔥 Both', value: 'both' }
+                ],
+                default: 'both'
+            }]);
+            cpInterface = ans.cpInterface;
+        }
+
+        await initializeProject(n, s.lang, s.type, {
+            isPublic: false,
+            createRemote: false,
+            githubToken: null,
+            authMethod: 'none',
+            cpInterface
+        });
     });
 });
 
@@ -627,6 +662,7 @@ async function startWizard(initialName?: string) {
     let language: ProjectLanguage | undefined;
     let github = false;
     let githubToken: string | null = null;
+    let cpInterface: 'online' | 'terminal' | 'both' = 'both';
 
     const BACK = '< Back';
     const CAT_WEB = '🌐 Web Development (React, TS, HTML/CSS)';
@@ -708,9 +744,28 @@ async function startWizard(initialName?: string) {
                     step++;
                 }
             } else {
-                // CP projects skip straight to done
-                github = false;
-                step = 7; // jump past all web dev steps
+                const ans = await inquirer.prompt([{
+                    type: 'list',
+                    name: 'cpInterface',
+                    message: 'Choose Practice Interface:',
+                    choices: [
+                        { name: '🌐 Online Compiler (browser)', value: 'online' },
+                        { name: '💻 Local Terminal (cmd)', value: 'terminal' },
+                        { name: '🔥 Both', value: 'both' },
+                        new inquirer.Separator(),
+                        { name: BACK, value: 'back' }
+                    ],
+                    default: 'both'
+                }]);
+
+                if (ans.cpInterface === 'back') {
+                    name = undefined;
+                    step--;
+                } else {
+                    cpInterface = ans.cpInterface;
+                    github = false;
+                    step = 7; // CP projects skip to execution
+                }
             }
 
             // ── STEP 5: GitHub Token ────────────────────────────────────────────
@@ -787,7 +842,8 @@ async function startWizard(initialName?: string) {
             isPublic: false,
             createRemote: !!githubToken,
             githubToken,
-            authMethod: 'none'
+            authMethod: 'none',
+            cpInterface: cpInterface
         });
 
         // ── Post-creation: Web Dev deploy / local run ─────────────────────

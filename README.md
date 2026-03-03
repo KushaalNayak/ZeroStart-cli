@@ -31,6 +31,7 @@ npm install -g zerostart-cli
 - **🚀 One-Command Setup**: Scaffold, initialize Git, and deploy in seconds.
 - **📦 Pre-built Templates**: React, Next.js, Express, C++, Java, Python, and more.
 - **🐙 GitHub Integration**: Auto-create repositories and push with human-style commits.
+- **🏆 CP Smart Practice**: Choose between an online compiler, local terminal, or both for your competitive programming practice.
 - **🌐 Instant Deployment**: Vercel and Netlify support built-in.
 
 ---

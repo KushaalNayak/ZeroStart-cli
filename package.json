@@ -5,7 +5,7 @@
         "zerostart": "./out/cli.js"
     },
     "description": "Create and deploy a complete project with one command.",
-    "version": "0.0.45",
+    "version": "0.0.46",
     "engines": {
         "vscode": "^1.85.0"
     },
