@@ -2,10 +2,10 @@
     "name": "zerostart-cli",
     "displayName": "ZeroStart",
     "bin": {
-        "zerostart": "./out/cli.js"
+        "zerostart": "out/cli.js"
     },
     "description": "Create and deploy a complete project with one command.",
-    "version": "0.0.46",
+    "version": "0.0.48",
     "engines": {
         "vscode": "^1.85.0"
     },

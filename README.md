@@ -96,6 +96,13 @@ zerostart ml-py my-model
 | `zerostart test` | Set up a testing framework |
 | `zerostart add [feature]` | Add features to an existing project |
 
+### Development Commands
+
+| Command | Description |
+| :--- | :--- |
+| `npm run lint` | Run ESLint to check for code issues |
+| `npm run compile` | Compile TypeScript into JavaScript |
+
 ### Deployment
 
 | Command | Description |

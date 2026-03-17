@@ -8,6 +8,7 @@ export function activate(context: vscode.ExtensionContext) {
     // Set default auto-select family attempt timeout to 1000ms if available
     // This helps with connection issues in dual-stack (IPv4/IPv6) environments
     try {
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
         const net = require('net');
         if (typeof net.setDefaultAutoSelectFamilyAttemptTimeout === 'function') {
             net.setDefaultAutoSelectFamilyAttemptTimeout(1000);
@@ -17,7 +18,7 @@ export function activate(context: vscode.ExtensionContext) {
         console.warn('Failed to set auto-select family attempt timeout:', error);
     }
 
-    let disposable = vscode.commands.registerCommand('zerostart.create', async (projectName?: string) => {
+    const disposable = vscode.commands.registerCommand('zerostart.create', async (projectName?: string) => {
         const projectManager = new ProjectManager();
         await projectManager.start(projectName);
     });

@@ -65,7 +65,12 @@ export class GitHubServiceCLI {
             return `https://${this.token}@github.com/${user.login}/${config.name}.git`;
 
         } catch (error: any) {
-            console.error(`GitHub API Error: ${error.message}`);
+            if (error.response) {
+                console.error(`GitHub API Error (${error.status}): ${error.message}`);
+                // console.debug(`Response:`, error.response.data);
+            } else {
+                console.error(`GitHub API Error: ${error.message}`);
+            }
             // Don't throw, just return undefined so the process continues locally
             return undefined;
         }

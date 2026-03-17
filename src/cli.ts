@@ -181,7 +181,7 @@ async function initializeProject(
 program
     .name('zerostart')
     .description('Create and deploy a complete project with one command')
-    .version('0.0.46');
+    .version('0.0.48');
 
 // zerostart init [project-name]
 program
@@ -540,7 +540,7 @@ program
             }
 
             const latestVersion = stdout.trim();
-            const currentVersion = '0.0.46';
+            const currentVersion = '0.0.48';
 
             if (latestVersion === currentVersion) {
                 spinner.succeed(chalk.green('You are using the latest version!'));
@@ -662,13 +662,14 @@ async function startWizard(initialName?: string) {
     let language: ProjectLanguage | undefined;
     let github = false;
     let githubToken: string | null = null;
+    let isPublic = false;
     let cpInterface: 'online' | 'terminal' | 'both' = 'both';
 
     const BACK = '< Back';
     const CAT_WEB = '🌐 Web Development (React, TS, HTML/CSS)';
     const CAT_CP = '🏆 Competitive Programming (C++, Java, Python)';
 
-    while (step > 0 && step <= 6) {
+    while (step > 0 && step <= 7) {
         // ── STEP 1: Category ────────────────────────────────────────────────
         if (step === 1) {
             const ans = await inquirer.prompt([{
@@ -764,12 +765,38 @@ async function startWizard(initialName?: string) {
                 } else {
                     cpInterface = ans.cpInterface;
                     github = false;
-                    step = 7; // CP projects skip to execution
+                    step = 8; // CP projects skip to execution
                 }
             }
 
-            // ── STEP 5: GitHub Token ────────────────────────────────────────────
+            // ── STEP 5: Public or Private? ───────────────────────────────────────
         } else if (step === 5) {
+            if (github) {
+                const ans = await inquirer.prompt([{
+                    type: 'list',
+                    name: 'isPublic',
+                    message: 'Repository visibility:',
+                    choices: [
+                        { name: '🔓 Public (everyone can see)', value: true },
+                        { name: '🔒 Private (only you can see)', value: false },
+                        new inquirer.Separator(),
+                        { name: BACK, value: 'back' }
+                    ],
+                    default: false
+                }]);
+
+                if (ans.isPublic === 'back') {
+                    step--;
+                } else {
+                    isPublic = ans.isPublic;
+                    step++;
+                }
+            } else {
+                step++;
+            }
+
+            // ── STEP 6: GitHub Token ────────────────────────────────────────────
+        } else if (step === 6) {
             if (github) {
                 showGitHubTokenHelp();
                 console.log(chalk.gray('  💡 Tip: ') + chalk.white('Your token can be saved and reused for all future ZeroStart projects.'));
@@ -800,15 +827,15 @@ async function startWizard(initialName?: string) {
                         step++;
                     } else {
                         spinner.fail(chalk.red('Invalid token or no internet. Please try again.'));
-                        // Stay on step 5 to retry
+                        // Stay on step 6 to retry
                     }
                 }
             } else {
                 step++; // No GitHub — skip token step
             }
 
-            // ── STEP 6: Run locally or Deploy to Vercel? (Web Dev only) ────────
-        } else if (step === 6) {
+            // ── STEP 7: Run locally or Deploy to Vercel? (Web Dev only) ────────
+        } else if (step === 7) {
             const deployAns = await inquirer.prompt([{
                 type: 'list',
                 name: 'action',
@@ -833,13 +860,13 @@ async function startWizard(initialName?: string) {
     }
 
     // ── Execute the project creation ─────────────────────────────────────────
-    if ((step > 6 || step === 7) && name && language) {
+    if ((step > 7 || step === 8) && name && language) {
         let type = ProjectType.WebApp;
         if (language === ProjectLanguage.TypeScript) type = ProjectType.CLITool;
         if (category === CAT_CP) type = ProjectType.DSAPractice;
 
         const projectPath = await initializeProject(name, language, type, {
-            isPublic: false,
+            isPublic: isPublic,
             createRemote: !!githubToken,
             githubToken,
             authMethod: 'none',
