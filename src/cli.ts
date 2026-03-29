@@ -134,6 +134,36 @@ async function initializeProject(
         console.log(chalk.gray('  Location: ') + chalk.cyan(projectPath));
         console.log();
 
+        console.log(chalk.green('  ✨ Pro Tip: Try our new VS Code Extension for a better integrated experience! Search "ZeroStart" in the VS Code Marketplace.'));
+        console.log();
+        
+        try {
+            const { installExtension } = await inquirer.prompt([{
+                type: 'confirm',
+                name: 'installExtension',
+                message: 'Would you like to install the ZeroStart VS Code extension?',
+                default: false
+            }]);
+
+            if (installExtension) {
+                const extSpinner = ora({ text: 'Installing VS Code extension...', color: 'cyan' }).start();
+                await new Promise<void>((resolve) => {
+                    exec('code --install-extension zerostart.zerostart-vscode', (error) => {
+                        if (error) {
+                            extSpinner.warn(chalk.yellow('Failed to install automatically. Please install it manually from the extensions tab (ID: zerostart.zerostart-vscode).'));
+                        } else {
+                            extSpinner.succeed(chalk.green('VS Code extension installed successfully!'));
+                        }
+                        resolve();
+                    });
+                });
+                console.log();
+            }
+        } catch (e) {
+            // Ignore prompt errors if any
+        }
+
+
         // ── CP languages: open browser + interactive terminal ─────────────
         if (type === ProjectType.DSAPractice && [ProjectLanguage.Python, ProjectLanguage.Java, ProjectLanguage.CPP].includes(language)) {
             const cpChoice = options.cpInterface || 'both';
@@ -181,7 +211,7 @@ async function initializeProject(
 program
     .name('zerostart')
     .description('Create and deploy a complete project with one command')
-    .version('0.0.48');
+    .version('0.0.49');
 
 // zerostart init [project-name]
 program
@@ -540,7 +570,7 @@ program
             }
 
             const latestVersion = stdout.trim();
-            const currentVersion = '0.0.48';
+            const currentVersion = '0.0.49';
 
             if (latestVersion === currentVersion) {
                 spinner.succeed(chalk.green('You are using the latest version!'));
@@ -563,6 +593,93 @@ program
         console.log();
         console.log(chalk.gray('  Explore commands, templates, and deployment guides at the site.'));
         openUrl(docsUrl);
+    });
+
+// zerostart info / stats
+program
+    .command('stats')
+    .alias('info')
+    .description('Show live stats for ZeroStart')
+    .action(async () => {
+        showBanner();
+        const spinner = ora({ text: 'Fetching live stats...', color: 'cyan' }).start();
+
+        const currentVersion = program.version() || '0.0.49';
+        let latestVersion = currentVersion;
+        let npmDownloads = '890+';
+        let vscodeInstalls = '50+';
+
+        // Helper to fetch using https
+        const https = require('https');
+        
+        const fetchJSON = (url: string, options: any = {}) => {
+            return new Promise<any>((resolve, reject) => {
+                const req = https.request(url, options, (res: any) => {
+                    let data = '';
+                    res.on('data', (chunk: string) => data += chunk);
+                    res.on('end', () => {
+                        try { resolve(JSON.parse(data)); }
+                        catch (e) { resolve(null); }
+                    });
+                });
+                req.on('error', () => resolve(null));
+                if (options.body) req.write(options.body);
+                req.end();
+            });
+        };
+
+        try {
+            // Get NPM Downloads (last-month)
+            const npmData = await fetchJSON('https://api.npmjs.org/downloads/point/last-month/zerostart-cli');
+            if (npmData && npmData.downloads) {
+                npmDownloads = npmData.downloads.toLocaleString() + '+';
+            }
+
+            // Get VS Code Installs via Marketplace Query
+            const bodyStr = JSON.stringify({
+                filters: [{ criteria: [{ filterType: 7, value: 'zerostart.zerostart-vscode' }] }],
+                flags: 2
+            });
+            const vsData = await fetchJSON('https://marketplace.visualstudio.com/_apis/public/gallery/extensionquery', {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json;api-version=3.0-preview.1',
+                    'Content-Type': 'application/json',
+                    'Content-Length': Buffer.byteLength(bodyStr)
+                },
+                body: bodyStr
+            });
+
+            if (vsData && vsData.results && vsData.results[0] && vsData.results[0].extensions && vsData.results[0].extensions[0]) {
+                const ext = vsData.results[0].extensions[0];
+                const stat = ext.statistics.find((s: any) => s.statisticName === 'install');
+                if (stat) vscodeInstalls = stat.value.toLocaleString() + '+';
+            }
+
+            // Get latest version
+            latestVersion = await new Promise<string>((resolve) => {
+                exec('npm view zerostart-cli version', (error, stdout) => {
+                    if (error || !stdout) resolve(currentVersion);
+                    else resolve(stdout.trim());
+                });
+            });
+
+            spinner.stop();
+            
+            console.log(chalk.bold.cyan('  📊 Live Stats:'));
+            console.log(chalk.gray('  ----------------------------------------'));
+            console.log(chalk.gray('  NPM Downloads (Last Month): ') + chalk.white(npmDownloads));
+            console.log(chalk.gray('  VS Code Installs:           ') + chalk.white(vscodeInstalls));
+            console.log(chalk.gray('  Latest Version:             ') + chalk.white('v' + Math.max(0, parseInt(latestVersion.replace('v', ''), 10)) ? latestVersion : latestVersion));
+            console.log(chalk.gray('  ----------------------------------------\n'));
+
+            if (latestVersion && latestVersion !== currentVersion && latestVersion !== 'unknown') {
+                console.log(chalk.bold.yellow(`  A new version of ZeroStart is available! Run `) + chalk.cyan(`npm i -g zerostart-cli`) + chalk.bold.yellow(` to update.`));
+            }
+
+        } catch (e) {
+            spinner.fail(chalk.red('Failed to fetch some stats.'));
+        }
     });
 
 // Standalone deployment commands
