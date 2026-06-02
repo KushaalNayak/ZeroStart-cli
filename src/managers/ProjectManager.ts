@@ -138,15 +138,17 @@ export class ProjectManager {
                     [ProjectLanguage.CPP]: 'https://www.onlinegdb.com/online_c++_compiler'
                 };
                 const link = gdbLinks[language as string];
-                const action = await vscode.window.showInformationMessage(`Project '${name}' created! Practice online?`, 'Open GDB Link', 'Open Project');
+                const action = await vscode.window.showInformationMessage(`Project '${name}' created! Practice online?`, 'Open GDB Link', 'Open Project', '⭐ Star on GitHub');
                 if (action === 'Open GDB Link') {
                     vscode.env.openExternal(vscode.Uri.parse(link));
                 } else if (action === 'Open Project') {
                     const uri = vscode.Uri.file(projectPath);
                     await vscode.commands.executeCommand('vscode.openFolder', uri);
+                } else if (action === '⭐ Star on GitHub') {
+                    vscode.env.openExternal(vscode.Uri.parse('https://github.com/KushaalNayak/ZeroStart'));
                 }
             } else if (language === ProjectLanguage.HTMLCSS) {
-                const action = await vscode.window.showInformationMessage(`Project '${name}' created! Deploy to Vercel?`, 'Deploy Now', 'Open Project');
+                const action = await vscode.window.showInformationMessage(`Project '${name}' created! Deploy to Vercel?`, 'Deploy Now', 'Open Project', '⭐ Star on GitHub');
                 if (action === 'Deploy Now') {
                     const vm = new VercelManager();
                     if (await vm.checkAuth()) {
@@ -158,12 +160,16 @@ export class ProjectManager {
                 } else if (action === 'Open Project') {
                     const uri = vscode.Uri.file(projectPath);
                     await vscode.commands.executeCommand('vscode.openFolder', uri);
+                } else if (action === '⭐ Star on GitHub') {
+                    vscode.env.openExternal(vscode.Uri.parse('https://github.com/KushaalNayak/ZeroStart'));
                 }
             } else {
-                const action = await vscode.window.showInformationMessage(`Project '${name}' created successfully!`, 'Open Project');
+                const action = await vscode.window.showInformationMessage(`Project '${name}' created successfully!`, 'Open Project', '⭐ Star on GitHub');
                 if (action === 'Open Project') {
                     const uri = vscode.Uri.file(projectPath);
                     await vscode.commands.executeCommand('vscode.openFolder', uri);
+                } else if (action === '⭐ Star on GitHub') {
+                    vscode.env.openExternal(vscode.Uri.parse('https://github.com/KushaalNayak/ZeroStart'));
                 }
             }
 

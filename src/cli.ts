@@ -168,6 +168,24 @@ async function initializeProject(
             // Ignore prompt errors if any
         }
 
+        try {
+            console.log(chalk.yellow('  ⭐ If you like ZeroStart, please consider starring our repository!'));
+            const { starRepo } = await inquirer.prompt([{
+                type: 'confirm',
+                name: 'starRepo',
+                message: 'Support us by giving a ⭐ on GitHub?',
+                default: true
+            }]);
+
+            if (starRepo) {
+                console.log(chalk.cyan('  Thank you! Opening GitHub repository...'));
+                await openUrl('https://github.com/KushaalNayak/ZeroStart');
+                console.log();
+            }
+        } catch (e) {
+            // Ignore prompt errors if any
+        }
+
 
         // ── CP languages: open browser + interactive terminal ─────────────
         if (type === ProjectType.DSAPractice && [ProjectLanguage.Python, ProjectLanguage.Java, ProjectLanguage.CPP].includes(language)) {
@@ -216,7 +234,7 @@ async function initializeProject(
 program
     .name('zerostart')
     .description('Create and deploy a complete project with one command')
-    .version('0.0.50');
+    .version('0.0.51');
 
 // zerostart init [project-name]
 program
@@ -575,7 +593,7 @@ program
             }
 
             const latestVersion = stdout.trim();
-            const currentVersion = '0.0.50';
+            const currentVersion = '0.0.51';
 
             if (latestVersion === currentVersion) {
                 spinner.succeed(chalk.green('You are using the latest version!'));
@@ -609,7 +627,7 @@ program
         showBanner();
         const spinner = ora({ text: 'Fetching live stats...', color: 'cyan' }).start();
 
-        const currentVersion = program.version() || '0.0.50';
+        const currentVersion = program.version() || '0.0.51';
         let latestVersion = currentVersion;
         let npmDownloads = '890+';
         let vscodeInstalls = '50+';
