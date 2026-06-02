@@ -59,9 +59,15 @@ export class GitManager {
         }
     }
 
-    public async push(cwd: string) {
+    public async push(cwd: string, token?: string, repoUrl?: string) {
         try {
-            await exec('git push -u origin main', { cwd });
+            if (token && repoUrl) {
+                const pushUrl = repoUrl.replace('https://', `https://${token}@`);
+                await exec(`git push "${pushUrl}" main`, { cwd });
+                await exec('git branch -u origin/main main', { cwd });
+            } else {
+                await exec('git push -u origin main', { cwd });
+            }
         } catch (error: any) {
             throw new Error(`Failed to push to remote: ${error.message}`);
         }

@@ -1,7 +1,7 @@
 
 import * as vscode from 'vscode';
 import * as path from 'path';
-import * as fs from 'fs';
+
 import { ProjectLanguage, ProjectType, ProjectConfig } from '../types';
 import { TemplateManager } from './TemplateManager';
 import { GitHubService } from '../services/GitHubService';
@@ -100,7 +100,7 @@ export class ProjectManager {
                 location: vscode.ProgressLocation.Notification,
                 title: "Creating Project...",
                 cancellable: false
-            }, async (progress, token) => {
+            }, async (progress) => {
 
                 progress.report({ increment: 10, message: "Generating project structure..." });
                 await this.templateManager.createProjectStructure(config);

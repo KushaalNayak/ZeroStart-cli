@@ -15,6 +15,7 @@ import { NetlifyManager } from './managers/NetlifyManager';
 import { exec } from 'child_process';
 import open from 'open';
 import { handleAICommand } from './commands/ai';
+import * as https from 'https';
 
 
 
@@ -121,8 +122,12 @@ async function initializeProject(
             if (repoUrl) {
                 spinner.succeed(chalk.green('GitHub repository created'));
                 spinner.start(chalk.cyan('Pushing to GitHub...'));
-                if (options.authMethod !== 'GitHub CLI') await gitManager.addRemote(projectPath, repoUrl);
-                await gitManager.push(projectPath);
+                if (options.authMethod !== 'GitHub CLI') {
+                    await gitManager.addRemote(projectPath, repoUrl);
+                    await gitManager.push(projectPath, options.githubToken || undefined, repoUrl);
+                } else {
+                    await gitManager.push(projectPath);
+                }
                 spinner.succeed(chalk.green('Pushed to GitHub ✓'));
             } else {
                 spinner.warn(chalk.yellow('GitHub repository creation failed — continuing locally'));
@@ -211,7 +216,7 @@ async function initializeProject(
 program
     .name('zerostart')
     .description('Create and deploy a complete project with one command')
-    .version('0.0.49');
+    .version('0.0.50');
 
 // zerostart init [project-name]
 program
@@ -563,14 +568,14 @@ program
         showBanner();
         const spinner = ora({ text: 'Checking for updates...', color: 'cyan' }).start();
 
-        exec('npm view zerostart-cli version', (error, stdout, stderr) => {
+        exec('npm view zerostart-cli version', (error, stdout) => {
             if (error) {
                 spinner.fail(chalk.red('Failed to check for updates'));
                 return;
             }
 
             const latestVersion = stdout.trim();
-            const currentVersion = '0.0.49';
+            const currentVersion = '0.0.50';
 
             if (latestVersion === currentVersion) {
                 spinner.succeed(chalk.green('You are using the latest version!'));
@@ -604,16 +609,15 @@ program
         showBanner();
         const spinner = ora({ text: 'Fetching live stats...', color: 'cyan' }).start();
 
-        const currentVersion = program.version() || '0.0.49';
+        const currentVersion = program.version() || '0.0.50';
         let latestVersion = currentVersion;
         let npmDownloads = '890+';
         let vscodeInstalls = '50+';
 
         // Helper to fetch using https
-        const https = require('https');
-        
+
         const fetchJSON = (url: string, options: any = {}) => {
-            return new Promise<any>((resolve, reject) => {
+            return new Promise<any>((resolve) => {
                 const req = https.request(url, options, (res: any) => {
                     let data = '';
                     res.on('data', (chunk: string) => data += chunk);

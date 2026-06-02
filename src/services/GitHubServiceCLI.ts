@@ -25,7 +25,10 @@ export class GitHubServiceCLI {
             const client = this.getClient();
             const { data: user } = await client.users.getAuthenticated();
             return { login: user.login };
-        } catch (error) {
+        } catch (error: unknown) {
+            if (error instanceof Error) {
+                console.error(`GitHub token validation failed: ${error.message}`);
+            }
             return null;
         }
     }
@@ -38,7 +41,7 @@ export class GitHubServiceCLI {
             const { data: user } = await client.users.getAuthenticated();
 
             // repository create in authenticated user's account
-            const { data: repo } = await client.repos.createForAuthenticatedUser({
+            await client.repos.createForAuthenticatedUser({
                 name: config.name,
                 description: config.description,
                 private: !config.isTheRepoPublic,
@@ -51,25 +54,26 @@ export class GitHubServiceCLI {
                         owner: user.login,
                         repo: config.name,
                         names: [
-                            config.type.toLowerCase().replace(/[^a-z0-9-]/g, '-'),
-                            config.language.toLowerCase().replace(/[^a-z0-9-]/g, '-')
+                            config.type.toLowerCase().replace(/[^a-z0-9-]/g, '-').substring(0, 35),
+                            config.language.toLowerCase().replace(/[^a-z0-9-]/g, '-').substring(0, 35)
                         ]
                     });
-                } catch (e) {
-                    console.warn("Could not set topics", e);
+                } catch (e: unknown) {
+                    console.warn("Could not set topics", e instanceof Error ? e.message : String(e));
                 }
             }
 
-            // For CLI with PAT, we can inject the token for push
-            // https://<token>@github.com/user/repo.git
-            return `https://${this.token}@github.com/${user.login}/${config.name}.git`;
+            // Return clean HTTPS URL (without embedding the token)
+            return `https://github.com/${user.login}/${config.name}.git`;
 
-        } catch (error: any) {
-            if (error.response) {
-                console.error(`GitHub API Error (${error.status}): ${error.message}`);
-                // console.debug(`Response:`, error.response.data);
-            } else {
+        } catch (error: unknown) {
+            if (typeof error === 'object' && error !== null && 'response' in error) {
+                const apiErr = error as any;
+                console.error(`GitHub API Error (${apiErr.status}): ${apiErr.message}`);
+            } else if (error instanceof Error) {
                 console.error(`GitHub API Error: ${error.message}`);
+            } else {
+                console.error(`Unknown GitHub API Error occurred`);
             }
             // Don't throw, just return undefined so the process continues locally
             return undefined;
