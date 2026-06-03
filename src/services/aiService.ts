@@ -78,7 +78,7 @@ export class AIService {
                 return JSON.parse(content) as AIProjectTemplate;
             } else if (this.provider === 'gemini' && this.genAI) {
                 const model = this.genAI.getGenerativeModel({
-                    model: "gemini-1.5-pro",
+                    model: "gemini-flash-latest",
                     systemInstruction: systemPrompt,
                     generationConfig: {
                         responseMimeType: "application/json",
