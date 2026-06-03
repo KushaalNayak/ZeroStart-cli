@@ -1,5 +1,5 @@
 import OpenAI from 'openai';
-import { ConfigManager } from '../managers/ConfigManager';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 export interface AIProjectTemplate {
     projectName: string;
@@ -14,29 +14,19 @@ export interface AIProjectTemplate {
 
 export class AIService {
     private openai: OpenAI | null = null;
+    private genAI: GoogleGenerativeAI | null = null;
+    private provider: 'openai' | 'gemini';
 
-    constructor(apiKey?: string) {
-        if (apiKey) {
+    constructor(apiKey: string, provider: 'openai' | 'gemini' = 'openai') {
+        this.provider = provider;
+        if (provider === 'openai') {
             this.openai = new OpenAI({ apiKey });
-        }
-    }
-
-    private async ensureInitialized() {
-        if (this.openai) return;
-
-        const configManager = new ConfigManager();
-        const apiKey = await configManager.getOpenAIApiKey();
-
-        if (apiKey) {
-            this.openai = new OpenAI({ apiKey });
+        } else {
+            this.genAI = new GoogleGenerativeAI(apiKey);
         }
     }
 
     async generateProject(prompt: string, stack?: string): Promise<AIProjectTemplate> {
-        await this.ensureInitialized();
-        if (!this.openai) {
-            throw new Error('OpenAI API Key not found. Please set it using environment variables or user config.');
-        }
 
         const systemPrompt = `
             You are a world-class software architect and lead developer. 
@@ -70,24 +60,43 @@ export class AIService {
         const userMessage = `Project Description: ${prompt}${stack ? `\nPreferred Stack: ${stack}` : ''}`;
 
         try {
-            const response = await this.openai.chat.completions.create({
-                model: 'gpt-4o',
-                messages: [
-                    { role: 'system', content: systemPrompt },
-                    { role: 'user', content: userMessage }
-                ],
-                response_format: { type: 'json_object' }
-            });
+            if (this.provider === 'openai' && this.openai) {
+                const response = await this.openai.chat.completions.create({
+                    model: 'gpt-4o',
+                    messages: [
+                        { role: 'system', content: systemPrompt },
+                        { role: 'user', content: userMessage }
+                    ],
+                    response_format: { type: 'json_object' }
+                });
 
-            const content = response.choices[0].message.content;
-            if (!content) {
-                throw new Error('AI returned an empty response.');
+                const content = response.choices[0].message.content;
+                if (!content) {
+                    throw new Error('AI returned an empty response.');
+                }
+
+                return JSON.parse(content) as AIProjectTemplate;
+            } else if (this.provider === 'gemini' && this.genAI) {
+                const model = this.genAI.getGenerativeModel({
+                    model: "gemini-1.5-pro",
+                    systemInstruction: systemPrompt,
+                    generationConfig: {
+                        responseMimeType: "application/json",
+                    }
+                });
+
+                const result = await model.generateContent(userMessage);
+                const content = result.response.text();
+                
+                if (!content) {
+                    throw new Error('AI returned an empty response.');
+                }
+                return JSON.parse(content) as AIProjectTemplate;
             }
-
-            return JSON.parse(content) as AIProjectTemplate;
+            throw new Error('AI Provider not initialized properly.');
         } catch (error: any) {
-            if (error.status === 401) {
-                throw new Error('Invalid OpenAI API Key.');
+            if (error.status === 401 || (error.message && error.message.includes('API key not valid'))) {
+                throw new Error(`Invalid ${this.provider === 'openai' ? 'OpenAI' : 'Gemini'} API Key.`);
             }
             throw new Error(`AI Service Error: ${error.message}`);
         }

@@ -4,6 +4,8 @@ import * as os from 'os';
 
 export interface Config {
     openaiApiKey?: string;
+    geminiApiKey?: string;
+    aiProvider?: 'openai' | 'gemini';
     // Add more config fields here as needed
 }
 
@@ -55,5 +57,27 @@ export class ConfigManager {
 
     async setOpenAIApiKey(key: string): Promise<void> {
         await this.setConfig({ openaiApiKey: key });
+    }
+
+    async getGeminiApiKey(): Promise<string | undefined> {
+        if (process.env.GEMINI_API_KEY) {
+            return process.env.GEMINI_API_KEY;
+        }
+
+        const config = await this.getConfig();
+        return config.geminiApiKey;
+    }
+
+    async setGeminiApiKey(key: string): Promise<void> {
+        await this.setConfig({ geminiApiKey: key });
+    }
+
+    async getAiProvider(): Promise<'openai' | 'gemini' | undefined> {
+        const config = await this.getConfig();
+        return config.aiProvider;
+    }
+
+    async setAiProvider(provider: 'openai' | 'gemini'): Promise<void> {
+        await this.setConfig({ aiProvider: provider });
     }
 }
